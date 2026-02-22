@@ -1,0 +1,18 @@
+data:
+  dataset: fashion_mnist
+  batch_size: 128
+
+diffusion:
+  num_timesteps: 1000
+  beta_start: 1e-4
+  beta_end: 0.02
+
+model:
+  image_channels: 1
+  image_size: 28
+  num_timesteps: 1000
+
+training:
+  epochs: 50
+  learning_rate: 1e-3
+  device: auto

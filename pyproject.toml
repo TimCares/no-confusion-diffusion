@@ -1,0 +1,30 @@
+[project]
+name = "no-confusion-diffusion"
+version = "0.1.0"
+description = "No-Confusion Diffusion -- Hackathon for learning to build and train DDPM models"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch",
+    "torchvision",
+    "diffusers",
+    "omegaconf",
+    "pydantic",
+    "tqdm",
+    "pillow",
+    "matplotlib",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.2.0",
+    "jupyter>=1.1.1",
+    "nbconvert>=7.17.0",
+]
