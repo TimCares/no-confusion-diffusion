@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
+from pathlib import Path
 
 import torch
 
@@ -27,7 +29,7 @@ def _build_model(config: Config, *, use_solution: bool, device: torch.device) ->
     """
     if use_solution:
         from src.solution.model import SolutionUNet
-        model = SolutionUNet(config.model)
+        model = SolutionUNet(config.model, config.solution)
     else:
         from src.model import DiffusionModel
         model = DiffusionModel(config.model)
@@ -76,13 +78,19 @@ def main() -> None:
     device: torch.device = resolve_device(config.training.device)
     print(f"Using device: {device}")
 
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    run_dir = Path(config.training.output_dir) / timestamp
+    run_dir.mkdir(parents=True, exist_ok=True)
+
     model = _build_model(config, use_solution=args.solution, device=device)
     diffusion = GaussianDiffusion(config.diffusion, device=device)
     sampler = _build_sampler(diffusion, device, custom_sampler=args.custom_sampler)
     train_loader, val_loader = create_dataloaders(config.data)
 
-    model = train(model, train_loader, val_loader, diffusion, config, device)
-    generate_samples(model, sampler, config, device)
+    model = train(model, train_loader, val_loader, diffusion, sampler, config, device, run_dir)
+
+    print("\nGenerating final samples with best checkpoint...")
+    generate_samples(model, sampler, config, run_dir, filename="samples_final.png")
 
 
 if __name__ == "__main__":

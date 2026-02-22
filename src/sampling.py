@@ -24,19 +24,22 @@ def generate_samples(
     model: nn.Module,
     sampler: Sampler,
     config: Config,
-    device: torch.device,
+    output_dir: Path,
+    *,
     num_samples: int = 64,
     filename: str = "samples.png",
+    title: str | None = None,
 ) -> torch.Tensor:
     """Generate a grid of samples and save to disk.
 
     Args:
         model (nn.Module): Trained denoiser model.
         sampler (Sampler): Reverse-process sampler with a ``.sample()`` method.
-        config (Config): Full configuration.
-        device (torch.device): Device to sample on.
+        config (Config): Full configuration (used for image shape).
+        output_dir (Path): Directory to save the sample grid into.
         num_samples (int): Number of images to generate. Defaults to 64.
-        filename (str): Output filename within the output directory. Defaults to "samples.png".
+        filename (str): Output filename within output_dir. Defaults to "samples.png".
+        title (str | None): Grid title. Defaults to dataset name.
 
     Returns:
         torch.Tensor: Generated images, shape (num_samples, C, H, W).
@@ -48,11 +51,12 @@ def generate_samples(
         config.model.image_size,
     )
 
-    print(f"\nGenerating {num_samples} samples...")
     samples = sampler.sample(model, shape)
 
-    output_path = Path(config.training.output_dir) / filename
-    save_image_grid(samples, output_path, nrow=8, title=f"Generated {config.data.dataset} samples")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / filename
+    grid_title = title or f"Generated {config.data.dataset} samples"
+    save_image_grid(samples, output_path, nrow=8, title=grid_title)
     print(f"Saved sample grid to {output_path}")
 
     return samples

@@ -13,27 +13,38 @@ import torch.nn as nn
 from diffusers import UNet2DModel
 
 if TYPE_CHECKING:
-    from src.config import ModelConfig
+    from src.config import ModelConfig, SolutionConfig
 
 
 class SolutionUNet(nn.Module):
     """Thin wrapper around HuggingFace UNet2DModel for the hackathon pipeline.
 
     Args:
-        config (ModelConfig): Model configuration with image_channels, image_size, num_timesteps.
+        model_config (ModelConfig): Image spec (channels, size, timesteps).
+        solution_config (SolutionConfig): Architecture hyperparameters.
     """
 
-    def __init__(self, config: ModelConfig) -> None:
+    def __init__(self, model_config: ModelConfig, solution_config: SolutionConfig) -> None:
         super().__init__()
+        channels = solution_config.block_out_channels
+        n_stages = len(channels)
+
+        if solution_config.use_attention:
+            down_types = ("DownBlock2D",) + ("AttnDownBlock2D",) * (n_stages - 1)
+            up_types = ("AttnUpBlock2D",) * (n_stages - 1) + ("UpBlock2D",)
+        else:
+            down_types = ("DownBlock2D",) * n_stages
+            up_types = ("UpBlock2D",) * n_stages
+
         self.unet = UNet2DModel(
-            sample_size=config.image_size,
-            in_channels=config.image_channels,
-            out_channels=config.image_channels,
-            layers_per_block=1,
-            block_out_channels=(64, 128),
-            norm_num_groups=32,
-            down_block_types=("DownBlock2D", "DownBlock2D"),
-            up_block_types=("UpBlock2D", "UpBlock2D"),
+            sample_size=model_config.image_size,
+            in_channels=model_config.image_channels,
+            out_channels=model_config.image_channels,
+            layers_per_block=solution_config.layers_per_block,
+            block_out_channels=channels,
+            norm_num_groups=solution_config.norm_num_groups,
+            down_block_types=down_types,
+            up_block_types=up_types,
         )
 
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:

@@ -55,6 +55,22 @@ class ModelConfig(BaseModel):
     num_timesteps: int = 1000
 
 
+class SolutionConfig(BaseModel):
+    """Architecture configuration for the reference solution model.
+
+    Attributes:
+        layers_per_block (int): Residual blocks per UNet stage.
+        block_out_channels (tuple[int, ...]): Channel widths at each resolution stage.
+        norm_num_groups (int): Number of groups for GroupNorm.
+        use_attention (bool): Whether to use attention in the inner stages.
+    """
+
+    layers_per_block: int = 1
+    block_out_channels: tuple[int, ...] = (64, 128)
+    norm_num_groups: int = 32
+    use_attention: bool = False
+
+
 class TrainingConfig(BaseModel):
     """Training loop configuration.
 
@@ -86,6 +102,7 @@ class Config(BaseModel):
     data: DataConfig = DataConfig()
     diffusion: DiffusionConfig = DiffusionConfig()
     model: ModelConfig = ModelConfig()
+    solution: SolutionConfig = SolutionConfig()
     training: TrainingConfig = TrainingConfig()
 
 

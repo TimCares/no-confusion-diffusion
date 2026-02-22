@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
     from src.config import Config
     from src.diffusion import GaussianDiffusion
+    from src.sampling import Sampler
 
 
 def _run_epoch(
@@ -63,24 +64,30 @@ def train(
     train_loader: DataLoader,
     val_loader: DataLoader,
     diffusion: GaussianDiffusion,
+    sampler: Sampler,
     config: Config,
     device: torch.device,
+    run_dir: Path,
 ) -> nn.Module:
-    """Full training loop with validation scoring and checkpoint saving.
+    """Full training loop with per-epoch sampling, validation scoring, and checkpoints.
 
     Args:
         model (nn.Module): The denoiser model.
         train_loader (DataLoader): Training DataLoader.
         val_loader (DataLoader): Validation DataLoader.
         diffusion (GaussianDiffusion): Diffusion process.
+        sampler (Sampler): Reverse-process sampler for per-epoch sample generation.
         config (Config): Full configuration.
         device (torch.device): Device to train on.
+        run_dir (Path): Timestamped run directory for checkpoints and samples.
 
     Returns:
         nn.Module: The trained model (best checkpoint loaded).
     """
+    from src.sampling import generate_samples
+
     optimizer = torch.optim.Adam(model.parameters(), lr=config.training.learning_rate)
-    checkpoint_dir = Path(config.training.checkpoint_dir)
+    checkpoint_dir = run_dir / "checkpoints"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     best_checkpoint = checkpoint_dir / "best.pt"
 
@@ -88,6 +95,7 @@ def train(
 
     print(f"\nTraining for {config.training.epochs} epochs on {device}")
     print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
+    print(f"Run directory: {run_dir}")
     print("-" * 65)
 
     for epoch in range(1, config.training.epochs + 1):
@@ -105,6 +113,13 @@ def train(
             f"Train Loss: {train_loss:.6f} | "
             f"Val Loss: {val_loss:.6f} | "
             f"Score: {val_loss:.6f}{marker}"
+        )
+
+        generate_samples(
+            model, sampler, config, run_dir,
+            num_samples=16,
+            filename=f"samples_{epoch}.png",
+            title=f"Epoch {epoch} | Val Loss: {val_loss:.4f}",
         )
 
     print("-" * 65)
