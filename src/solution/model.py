@@ -29,11 +29,11 @@ class SolutionUNet(nn.Module):
             sample_size=config.image_size,
             in_channels=config.image_channels,
             out_channels=config.image_channels,
-            layers_per_block=2,
-            block_out_channels=(64, 128, 256),
+            layers_per_block=1,
+            block_out_channels=(64, 128),
             norm_num_groups=32,
-            down_block_types=("DownBlock2D", "AttnDownBlock2D", "AttnDownBlock2D"),
-            up_block_types=("AttnUpBlock2D", "AttnUpBlock2D", "UpBlock2D"),
+            down_block_types=("DownBlock2D", "DownBlock2D"),
+            up_block_types=("UpBlock2D", "UpBlock2D"),
         )
 
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:

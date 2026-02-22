@@ -42,22 +42,33 @@ uv run python main.py --config configs/fashion_mnist.yaml --solution
 ```
 Note: Having a GPU is encouraged for faster training.
 
-For a full run that should yield good results on a GPU (e.g. T4 on Colab):
-```bash
-uv run python main.py --config configs/fashion_mnist.yaml --solution training.epochs=100 data.batch_size=256
-```
-
-If you have a beefy GPU (e.g. RTX 5090):
-```bash
-uv run python main.py --config configs/fashion_mnist.yaml --solution training.epochs=200 data.batch_size=512 training.learning_rate=2e-3
-```
-
 You may override any default argument:
 ```bash
 uv run python main.py --config configs/fashion_mnist.yaml training.epochs=100
 ```
 
+For a full run that should yield good results on a GPU (e.g. T4 on Colab):
+```bash
+uv run python main.py --config configs/fashion_mnist.yaml --solution training.epochs=50 data.batch_size=256
+```
+
+If you have a strong GPU (e.g. RTX 5090):
+```bash
+uv run python main.py --config configs/fashion_mnist.yaml --solution training.epochs=50 data.batch_size=512
+```
+
+Generated samples will be saved to `outputs/samples.png` after training.
+
 ## Your Task
+
+There are generally two components to (basic) Diffusion:
+1. The actual model performing the noise prediction: `f(img, timestep) = noise`.
+2. The Diffusion Process, meaning noise schedule shape, number of timesteps, sampling strategy (DDPM vs DDIM vs others), loss weighting across timesteps, and so on.
+
+For the `--solution` flag, bot hare already implemented.
+When omitting the `--solution` flag, you have to implement 1. (the model), while 2. is still taken care of automatically.
+
+### Component 1
 
 Implement the `DiffusionModel` class in [src/model.py](src/model.py).
 
@@ -75,7 +86,8 @@ Once your model is implemented, run:
 uv run python main.py --config configs/fashion_mnist.yaml
 ```
 
-Generated samples will be saved to `outputs/samples.png` after training.
+### Component 2
+As an extra step/goal, you can implement the Diffusion Process (includes the reverse process) around the model, which is also quite interesting but more complex.
 
 ## Tips
 
@@ -89,9 +101,9 @@ Some architecture starter tips:
 
 ## Challenges
 
-| Level | Goal |
-|-------|------|
-| 1 | Implement a working model that produces recognizable Fashion-MNIST samples |
-| 2 | Beat the solution model's validation loss on Fashion-MNIST |
-| 3 | Get recognizable results on CIFAR-10 (`--config configs/cifar10.yaml`) |
-| 4 (Stretch) | Implement the DDPM sampling loop yourself in [src/sampler.py](src/sampler.py), then run with `--custom-sampler` |
+| Level | Component | Goal |
+|-------|------|------|
+| 1 | 1 |Implement a working model that produces recognizable Fashion-MNIST samples |
+| 2 | 1 | Beat the solution model's validation loss on Fashion-MNIST |
+| 3 | 1 | Get recognizable results on CIFAR-10 (`--config configs/cifar10.yaml`) |
+| 4 (Stretch) | 2 | Implement the DDPM sampling loop yourself in [src/sampler.py](src/sampler.py), then run with `--custom-sampler` |
